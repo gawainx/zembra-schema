@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zembra.local/schema/json/note_link.schema.json",
+  "title": "Zembra Note Link",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "source_note_id": { "$ref": "#/$defs/id" },
+    "target_note_id": { "$ref": "#/$defs/id" },
+    "anchor_text": { "type": ["string", "null"] },
+    "position": { "type": ["integer", "null"], "minimum": 0 },
+    "created_at": { "$ref": "#/$defs/timestamp" }
+  },
+  "required": ["id", "source_note_id", "target_note_id", "created_at"],
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "integer", "minimum": 0 }
+  }
+}

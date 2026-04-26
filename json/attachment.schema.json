@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zembra.local/schema/json/attachment.schema.json",
+  "title": "Zembra Attachment",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "note_id": { "$ref": "#/$defs/id" },
+    "file_name": { "type": "string", "minLength": 1 },
+    "mime_type": { "type": "string", "minLength": 1 },
+    "storage_path": { "type": "string", "minLength": 1 },
+    "size_bytes": { "type": "integer", "minimum": 0 },
+    "created_at": { "$ref": "#/$defs/timestamp" }
+  },
+  "required": ["id", "note_id", "file_name", "mime_type", "storage_path", "size_bytes", "created_at"],
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "integer", "minimum": 0 }
+  }
+}

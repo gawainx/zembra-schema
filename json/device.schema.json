@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zembra.local/schema/json/device.schema.json",
+  "title": "Zembra Device",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "platform": { "type": "string", "minLength": 1 },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "last_seen_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] }
+  },
+  "required": ["id", "name", "platform", "created_at"],
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "integer", "minimum": 0 }
+  }
+}

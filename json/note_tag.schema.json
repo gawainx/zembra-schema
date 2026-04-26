@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zembra.local/schema/json/note_tag.schema.json",
+  "title": "Zembra Note Tag",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "note_id": { "$ref": "#/$defs/id" },
+    "tag_id": { "$ref": "#/$defs/id" },
+    "created_at": { "$ref": "#/$defs/timestamp" }
+  },
+  "required": ["note_id", "tag_id", "created_at"],
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "integer", "minimum": 0 }
+  }
+}

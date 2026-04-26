@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS devices (
 CREATE TABLE IF NOT EXISTS notes (
     id TEXT PRIMARY KEY NOT NULL,
     content TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'Human' CHECK (role IN ('Human', 'Agent')),
     field_id TEXT,
     created_at INTEGER NOT NULL CHECK (created_at >= 0),
     updated_at INTEGER NOT NULL CHECK (updated_at >= created_at),

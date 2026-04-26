@@ -1,6 +1,6 @@
 # Zembra Note Schema
 
-本包定义 Zembra 笔记软件的本地数据表和跨端数据结构契约。当前版本为 `0.1.0`，目标是覆盖第一版个人笔记应用所需的核心对象：笔记、领域、标签、双链、附件、版本历史和设备。
+本包定义 Zembra 笔记软件的本地数据表和跨端数据结构契约。当前版本为 `0.2.0`，目标是覆盖面向人类和 Agent 的个人笔记应用核心对象：笔记、领域、标签、双链、附件、版本历史和设备。
 
 ## 设计原则
 
@@ -28,12 +28,15 @@
 | --- | --- | --- | --- |
 | `id` | `TEXT` | 笔记唯一 ID | 主键；必填；建议 ULID/UUID；创建后不可变 |
 | `content` | `TEXT` | 笔记正文 | 必填；承载纯文本、轻 Markdown、`@field`、`#tag`、双链文本 |
+| `role` | `TEXT` | 笔记创建角色 | 必填；固定为 `Human` 或 `Agent`；创建后不可变；旧数据默认 `Human` |
 | `field_id` | `TEXT` | 所属领域 ID | 可选；外键引用 `fields.id`；一条笔记最多一个 field |
 | `created_at` | `INTEGER` | 创建时间 | 必填；Unix timestamp |
 | `updated_at` | `INTEGER` | 最近更新时间 | 必填；Unix timestamp |
 | `archived_at` | `INTEGER` | 归档时间 | 可为空；为空表示未归档 |
 | `deleted_at` | `INTEGER` | 软删除时间 | 可为空；为空表示未删除 |
 | `current_revision_id` | `TEXT` | 当前版本 ID | 可为空；逻辑引用 `note_revisions.id` |
+
+`role` 只记录笔记创建时的角色来源，不表达当前编辑者，也不随版本历史变化。应用层应将其视为创建后不可修改字段。
 
 ## `fields` 领域表
 

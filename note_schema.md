@@ -1,6 +1,6 @@
 # Zembra Note Schema
 
-本包定义 Zembra 笔记软件的本地数据表和跨端数据结构契约。当前版本为 `0.2.0`，目标是覆盖面向人类和 Agent 的个人笔记应用核心对象：笔记、领域、标签、双链、附件、版本历史和设备。
+本包定义 Zembra 笔记软件的本地数据库 schema。当前版本为 `0.3.0`，目标是覆盖面向人类和 Agent 的个人笔记应用核心对象，并为多 workspace、本地优先、Supabase 协调的双向同步提供数据库基础。
 
 ## 设计原则
 
@@ -9,16 +9,32 @@
 - 双链关系独立存储，正文保留原始文本，关系表用于查询和跳转。
 - 删除和归档使用时间戳表达，保留本地恢复和同步扩展空间。
 - 版本历史先存完整快照，避免第一版引入 diff 复杂度。
+- 所有业务表通过 `workspace_id` 归属 workspace，跨 workspace 允许同名 field 和 tag。
+- 双向同步通过 `sync_changes` 交换可重放变更，通过 `sync_state` 记录游标，通过 `sync_conflicts` 记录需要处理的冲突。
 - 时间统一使用 Unix timestamp，单位由应用层保持一致。
 - ID 使用 `TEXT`，推荐 ULID 或 UUID，创建后不可变。
 
 ## 目录产物
 
 - `note_schema.md`：人读的设计说明。
-- `sqlite/001_initial_schema.sql`：SQLite 初始 DDL。
-- `json/*.schema.json`：跨端对象级 JSON Schema 契约。
+- `sqlite/001_initial_schema.sql`：SQLite 当前完整 DDL。
 - `migrations/001_initial_schema.sql`：v0.1.0 初始迁移脚本。
+- `migrations/002_add_note_role.sql`：v0.2.0 role 迁移脚本。
+- `migrations/003_add_bidirectional_sync.sql`：v0.3.0 workspace 和同步迁移脚本。
 - `CHANGELOG.md`：schema 变更记录。
+
+## `workspaces` 工作区表
+
+`workspaces` 是同步隔离边界。一套 workspace 内的 note、field、tag、device、revision 和同步日志共同收敛。
+
+| 字段名 | 类型 | 含义 | 约束信息 |
+| --- | --- | --- | --- |
+| `id` | `TEXT` | workspace 唯一 ID | 主键；必填；使用 UUID 字符串 |
+| `workspace_name` | `TEXT` | 可选显示名 | 可为空；为空时应用层展示 `id` |
+| `created_at` | `INTEGER` | 创建时间 | 必填；Unix timestamp |
+| `updated_at` | `INTEGER` | 更新时间 | 必填；不能早于 `created_at` |
+| `archived_at` | `INTEGER` | 归档时间 | 可为空 |
+| `deleted_at` | `INTEGER` | 软删除时间 | 可为空 |
 
 ## `notes` 笔记表
 
@@ -27,6 +43,7 @@
 | 字段名 | 类型 | 含义 | 约束信息 |
 | --- | --- | --- | --- |
 | `id` | `TEXT` | 笔记唯一 ID | 主键；必填；建议 ULID/UUID；创建后不可变 |
+| `workspace_id` | `TEXT` | 所属 workspace | 必填；外键引用 `workspaces.id` |
 | `content` | `TEXT` | 笔记正文 | 必填；承载纯文本、轻 Markdown、`@field`、`#tag`、双链文本 |
 | `role` | `TEXT` | 笔记创建角色 | 必填；固定为 `Human` 或 `Agent`；创建后不可变；旧数据默认 `Human` |
 | `field_id` | `TEXT` | 所属领域 ID | 可选；外键引用 `fields.id`；一条笔记最多一个 field |
@@ -35,6 +52,8 @@
 | `archived_at` | `INTEGER` | 归档时间 | 可为空；为空表示未归档 |
 | `deleted_at` | `INTEGER` | 软删除时间 | 可为空；为空表示未删除 |
 | `current_revision_id` | `TEXT` | 当前版本 ID | 可为空；逻辑引用 `note_revisions.id` |
+| `last_change_id` | `TEXT` | 最近一次影响当前状态的同步变更 | 可为空；逻辑引用 `sync_changes.id` |
+| `conflict_status` | `TEXT` | 当前冲突状态 | 必填；固定为 `none`、`auto_resolved` 或 `needs_review` |
 
 `role` 只记录笔记创建时的角色来源，不表达当前编辑者，也不随版本历史变化。应用层应将其视为创建后不可修改字段。
 
@@ -45,7 +64,8 @@
 | 字段名 | 类型 | 含义 | 约束信息 |
 | --- | --- | --- | --- |
 | `id` | `TEXT` | field 唯一 ID | 主键；必填；创建后不可变 |
-| `name` | `TEXT` | field 名称 | 必填；唯一 |
+| `workspace_id` | `TEXT` | 所属 workspace | 必填；外键引用 `workspaces.id` |
+| `name` | `TEXT` | field 名称 | 必填；在同一 workspace 内唯一 |
 | `created_at` | `INTEGER` | 创建时间 | 必填；Unix timestamp |
 
 ## `tags` 标签表
@@ -55,7 +75,8 @@
 | 字段名 | 类型 | 含义 | 约束信息 |
 | --- | --- | --- | --- |
 | `id` | `TEXT` | 标签唯一 ID | 主键；必填；创建后不可变 |
-| `name` | `TEXT` | 标签名 | 必填；唯一 |
+| `workspace_id` | `TEXT` | 所属 workspace | 必填；外键引用 `workspaces.id` |
+| `name` | `TEXT` | 标签名 | 必填；在同一 workspace 内唯一 |
 | `created_at` | `INTEGER` | 创建时间 | 必填；Unix timestamp |
 
 ## `note_tags` 笔记标签关联表
@@ -64,11 +85,12 @@
 
 | 字段名 | 类型 | 含义 | 约束信息 |
 | --- | --- | --- | --- |
+| `workspace_id` | `TEXT` | 所属 workspace | 必填；参与联合主键 |
 | `note_id` | `TEXT` | 笔记 ID | 必填；外键引用 `notes.id` |
 | `tag_id` | `TEXT` | 标签 ID | 必填；外键引用 `tags.id` |
 | `created_at` | `INTEGER` | 关联创建时间 | 必填；Unix timestamp |
 
-联合约束：`PRIMARY KEY(note_id, tag_id)`。
+联合约束：`PRIMARY KEY(workspace_id, note_id, tag_id)`。
 
 ## `note_links` 双向链接表
 
@@ -77,6 +99,7 @@
 | 字段名 | 类型 | 含义 | 约束信息 |
 | --- | --- | --- | --- |
 | `id` | `TEXT` | 链接记录 ID | 主键；必填 |
+| `workspace_id` | `TEXT` | 所属 workspace | 必填；外键引用 `workspaces.id` |
 | `source_note_id` | `TEXT` | 发起引用的笔记 | 必填；外键引用 `notes.id` |
 | `target_note_id` | `TEXT` | 被引用的笔记 | 必填；外键引用 `notes.id` |
 | `anchor_text` | `TEXT` | 正文中的链接文本 | 可为空 |
@@ -92,6 +115,7 @@
 | 字段名 | 类型 | 含义 | 约束信息 |
 | --- | --- | --- | --- |
 | `id` | `TEXT` | 附件唯一 ID | 主键；必填 |
+| `workspace_id` | `TEXT` | 所属 workspace | 必填；外键引用 `workspaces.id` |
 | `note_id` | `TEXT` | 所属笔记 ID | 必填；外键引用 `notes.id` |
 | `file_name` | `TEXT` | 原始文件名 | 必填 |
 | `mime_type` | `TEXT` | 文件类型 | 必填，例如 `image/png`、`application/pdf` |
@@ -106,11 +130,14 @@
 | 字段名 | 类型 | 含义 | 约束信息 |
 | --- | --- | --- | --- |
 | `id` | `TEXT` | 版本唯一 ID | 主键；必填 |
+| `workspace_id` | `TEXT` | 所属 workspace | 必填；外键引用 `workspaces.id` |
 | `note_id` | `TEXT` | 所属笔记 ID | 必填；外键引用 `notes.id` |
 | `content` | `TEXT` | 该版本正文快照 | 必填 |
 | `title` | `TEXT` | 该版本标题快照 | 可为空 |
 | `device_id` | `TEXT` | 修改来源设备 | 可为空；外键引用 `devices.id` |
 | `created_at` | `INTEGER` | 版本创建时间 | 必填；Unix timestamp |
+| `base_revision_id` | `TEXT` | 当前版本基于的版本 | 可为空；用于并发编辑判断 |
+| `change_id` | `TEXT` | 产生该版本的同步变更 | 可为空；逻辑引用 `sync_changes.id` |
 
 ## `devices` 设备表
 
@@ -119,10 +146,21 @@
 | 字段名 | 类型 | 含义 | 约束信息 |
 | --- | --- | --- | --- |
 | `id` | `TEXT` | 设备唯一 ID | 主键；必填；本地生成后保持稳定 |
+| `workspace_id` | `TEXT` | 所属 workspace | 必填；外键引用 `workspaces.id` |
 | `name` | `TEXT` | 设备名称 | 必填，例如 `Jagd MacBook` |
 | `platform` | `TEXT` | 设备平台 | 必填，例如 `macos`、`ios`、`windows` |
 | `created_at` | `INTEGER` | 首次登记时间 | 必填；Unix timestamp |
 | `last_seen_at` | `INTEGER` | 最近使用时间 | 可为空；Unix timestamp |
+| `sync_enabled` | `INTEGER` | 是否参与同步 | 必填；`0` 或 `1` |
+| `last_synced_at` | `INTEGER` | 最近成功同步时间 | 可为空；Unix timestamp |
+
+## 同步表
+
+`sync_changes` 保存可重放变更，字段包括 `workspace_id`、`device_id`、`entity_type`、`entity_id`、`operation`、revision 引用、JSON 文本载荷和同步时间戳。
+
+`sync_state` 以 `(workspace_id, device_id, scope)` 为主键保存 push/pull 游标，使用 `(last_change_created_at, last_change_id)` 避免同一秒多条 change 漏拉。
+
+`sync_conflicts` 保存自动收敛或需要用户处理的冲突，覆盖并发 note 编辑、删除与更新冲突、关系 attach/detach 冲突和 schema 不兼容。
 
 ## 最小关系汇总
 
@@ -134,3 +172,5 @@
 | 一条笔记可以有多个附件 | `attachments.note_id -> notes.id` |
 | 一条笔记可以有多个历史版本 | `note_revisions.note_id -> notes.id` |
 | 一个版本可以记录来源设备 | `note_revisions.device_id -> devices.id` |
+| 所有业务对象归属 workspace | 各表 `workspace_id -> workspaces.id` |
+| 同步变更按 workspace 交换 | `sync_changes.workspace_id -> workspaces.id` |

@@ -1,6 +1,8 @@
-PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys = OFF;
 
-CREATE TABLE IF NOT EXISTS workspaces (
+BEGIN TRANSACTION;
+
+CREATE TABLE workspaces (
     id TEXT PRIMARY KEY NOT NULL CHECK (length(trim(id)) > 0),
     workspace_name TEXT CHECK (workspace_name IS NULL OR length(trim(workspace_name)) > 0),
     created_at INTEGER NOT NULL CHECK (created_at >= 0),
@@ -9,7 +11,10 @@ CREATE TABLE IF NOT EXISTS workspaces (
     deleted_at INTEGER CHECK (deleted_at IS NULL OR deleted_at >= created_at)
 );
 
-CREATE TABLE IF NOT EXISTS fields (
+INSERT INTO workspaces (id, workspace_name, created_at, updated_at)
+VALUES ('00000000-0000-4000-8000-000000000300', NULL, unixepoch(), unixepoch());
+
+CREATE TABLE fields_new (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     name TEXT NOT NULL CHECK (length(trim(name)) > 0),
@@ -19,7 +24,13 @@ CREATE TABLE IF NOT EXISTS fields (
     FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS tags (
+INSERT INTO fields_new (id, workspace_id, name, created_at)
+SELECT id, '00000000-0000-4000-8000-000000000300', name, created_at FROM fields;
+
+DROP TABLE fields;
+ALTER TABLE fields_new RENAME TO fields;
+
+CREATE TABLE tags_new (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     name TEXT NOT NULL CHECK (length(trim(name)) > 0),
@@ -29,7 +40,13 @@ CREATE TABLE IF NOT EXISTS tags (
     FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS devices (
+INSERT INTO tags_new (id, workspace_id, name, created_at)
+SELECT id, '00000000-0000-4000-8000-000000000300', name, created_at FROM tags;
+
+DROP TABLE tags;
+ALTER TABLE tags_new RENAME TO tags;
+
+CREATE TABLE devices_new (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     name TEXT NOT NULL CHECK (length(trim(name)) > 0),
@@ -42,7 +59,13 @@ CREATE TABLE IF NOT EXISTS devices (
     FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS notes (
+INSERT INTO devices_new (id, workspace_id, name, platform, created_at, last_seen_at, sync_enabled, last_synced_at)
+SELECT id, '00000000-0000-4000-8000-000000000300', name, platform, created_at, last_seen_at, 1, NULL FROM devices;
+
+DROP TABLE devices;
+ALTER TABLE devices_new RENAME TO devices;
+
+CREATE TABLE notes_new (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     content TEXT NOT NULL,
@@ -60,7 +83,13 @@ CREATE TABLE IF NOT EXISTS notes (
     FOREIGN KEY (workspace_id, field_id) REFERENCES fields(workspace_id, id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-CREATE TABLE IF NOT EXISTS note_tags (
+INSERT INTO notes_new (id, workspace_id, content, role, field_id, created_at, updated_at, archived_at, deleted_at, current_revision_id, last_change_id, conflict_status)
+SELECT id, '00000000-0000-4000-8000-000000000300', content, role, field_id, created_at, updated_at, archived_at, deleted_at, current_revision_id, NULL, 'none' FROM notes;
+
+DROP TABLE notes;
+ALTER TABLE notes_new RENAME TO notes;
+
+CREATE TABLE note_tags_new (
     workspace_id TEXT NOT NULL,
     note_id TEXT NOT NULL,
     tag_id TEXT NOT NULL,
@@ -71,7 +100,13 @@ CREATE TABLE IF NOT EXISTS note_tags (
     FOREIGN KEY (workspace_id, tag_id) REFERENCES tags(workspace_id, id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS note_links (
+INSERT INTO note_tags_new (workspace_id, note_id, tag_id, created_at)
+SELECT '00000000-0000-4000-8000-000000000300', note_id, tag_id, created_at FROM note_tags;
+
+DROP TABLE note_tags;
+ALTER TABLE note_tags_new RENAME TO note_tags;
+
+CREATE TABLE note_links_new (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     source_note_id TEXT NOT NULL,
@@ -85,7 +120,13 @@ CREATE TABLE IF NOT EXISTS note_links (
     FOREIGN KEY (workspace_id, target_note_id) REFERENCES notes(workspace_id, id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS attachments (
+INSERT INTO note_links_new (id, workspace_id, source_note_id, target_note_id, anchor_text, position, created_at)
+SELECT id, '00000000-0000-4000-8000-000000000300', source_note_id, target_note_id, anchor_text, position, created_at FROM note_links;
+
+DROP TABLE note_links;
+ALTER TABLE note_links_new RENAME TO note_links;
+
+CREATE TABLE attachments_new (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     note_id TEXT NOT NULL,
@@ -98,7 +139,13 @@ CREATE TABLE IF NOT EXISTS attachments (
     FOREIGN KEY (workspace_id, note_id) REFERENCES notes(workspace_id, id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS note_revisions (
+INSERT INTO attachments_new (id, workspace_id, note_id, file_name, mime_type, storage_path, size_bytes, created_at)
+SELECT id, '00000000-0000-4000-8000-000000000300', note_id, file_name, mime_type, storage_path, size_bytes, created_at FROM attachments;
+
+DROP TABLE attachments;
+ALTER TABLE attachments_new RENAME TO attachments;
+
+CREATE TABLE note_revisions_new (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     note_id TEXT NOT NULL,
@@ -113,7 +160,13 @@ CREATE TABLE IF NOT EXISTS note_revisions (
     FOREIGN KEY (workspace_id, device_id) REFERENCES devices(workspace_id, id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-CREATE TABLE IF NOT EXISTS sync_changes (
+INSERT INTO note_revisions_new (id, workspace_id, note_id, content, title, device_id, created_at, base_revision_id, change_id)
+SELECT id, '00000000-0000-4000-8000-000000000300', note_id, content, title, device_id, created_at, NULL, NULL FROM note_revisions;
+
+DROP TABLE note_revisions;
+ALTER TABLE note_revisions_new RENAME TO note_revisions;
+
+CREATE TABLE sync_changes (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     device_id TEXT NOT NULL,
@@ -131,7 +184,7 @@ CREATE TABLE IF NOT EXISTS sync_changes (
     FOREIGN KEY (workspace_id, device_id) REFERENCES devices(workspace_id, id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS sync_state (
+CREATE TABLE sync_state (
     workspace_id TEXT NOT NULL,
     device_id TEXT NOT NULL,
     scope TEXT NOT NULL CHECK (scope IN ('push', 'pull')),
@@ -145,7 +198,7 @@ CREATE TABLE IF NOT EXISTS sync_state (
     FOREIGN KEY (workspace_id, device_id) REFERENCES devices(workspace_id, id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS sync_conflicts (
+CREATE TABLE sync_conflicts (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     entity_type TEXT NOT NULL CHECK (entity_type IN ('workspace', 'device', 'field', 'tag', 'note', 'note_revision', 'note_tag', 'note_link', 'attachment')),
@@ -163,24 +216,33 @@ CREATE TABLE IF NOT EXISTS sync_conflicts (
     FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-CREATE INDEX IF NOT EXISTS idx_workspaces_updated_at ON workspaces(updated_at);
-CREATE INDEX IF NOT EXISTS idx_workspaces_deleted_at ON workspaces(deleted_at);
-CREATE INDEX IF NOT EXISTS idx_fields_workspace_name ON fields(workspace_id, name);
-CREATE INDEX IF NOT EXISTS idx_tags_workspace_name ON tags(workspace_id, name);
-CREATE INDEX IF NOT EXISTS idx_notes_workspace_field_id ON notes(workspace_id, field_id);
-CREATE INDEX IF NOT EXISTS idx_notes_workspace_created_at ON notes(workspace_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_notes_workspace_updated_at ON notes(workspace_id, updated_at);
-CREATE INDEX IF NOT EXISTS idx_notes_workspace_archived_at ON notes(workspace_id, archived_at);
-CREATE INDEX IF NOT EXISTS idx_notes_workspace_deleted_at ON notes(workspace_id, deleted_at);
-CREATE INDEX IF NOT EXISTS idx_note_tags_workspace_tag_id ON note_tags(workspace_id, tag_id);
-CREATE INDEX IF NOT EXISTS idx_note_links_workspace_source_note_id ON note_links(workspace_id, source_note_id);
-CREATE INDEX IF NOT EXISTS idx_note_links_workspace_target_note_id ON note_links(workspace_id, target_note_id);
-CREATE INDEX IF NOT EXISTS idx_attachments_workspace_note_id ON attachments(workspace_id, note_id);
-CREATE INDEX IF NOT EXISTS idx_note_revisions_workspace_note_id_created_at ON note_revisions(workspace_id, note_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_note_revisions_workspace_device_id ON note_revisions(workspace_id, device_id);
-CREATE INDEX IF NOT EXISTS idx_sync_changes_workspace_created ON sync_changes(workspace_id, created_at, id);
-CREATE INDEX IF NOT EXISTS idx_sync_changes_workspace_device_created ON sync_changes(workspace_id, device_id, created_at, id);
-CREATE INDEX IF NOT EXISTS idx_sync_changes_entity ON sync_changes(workspace_id, entity_type, entity_id);
-CREATE INDEX IF NOT EXISTS idx_sync_changes_revision ON sync_changes(workspace_id, entity_type, new_revision_id);
-CREATE INDEX IF NOT EXISTS idx_sync_conflicts_workspace_status ON sync_conflicts(workspace_id, status, created_at);
-CREATE INDEX IF NOT EXISTS idx_sync_conflicts_entity ON sync_conflicts(workspace_id, entity_type, entity_id);
+CREATE INDEX idx_workspaces_updated_at ON workspaces(updated_at);
+CREATE INDEX idx_workspaces_deleted_at ON workspaces(deleted_at);
+CREATE INDEX idx_fields_workspace_name ON fields(workspace_id, name);
+CREATE INDEX idx_tags_workspace_name ON tags(workspace_id, name);
+CREATE INDEX idx_notes_workspace_field_id ON notes(workspace_id, field_id);
+CREATE INDEX idx_notes_workspace_created_at ON notes(workspace_id, created_at);
+CREATE INDEX idx_notes_workspace_updated_at ON notes(workspace_id, updated_at);
+CREATE INDEX idx_notes_workspace_archived_at ON notes(workspace_id, archived_at);
+CREATE INDEX idx_notes_workspace_deleted_at ON notes(workspace_id, deleted_at);
+CREATE INDEX idx_note_tags_workspace_tag_id ON note_tags(workspace_id, tag_id);
+CREATE INDEX idx_note_links_workspace_source_note_id ON note_links(workspace_id, source_note_id);
+CREATE INDEX idx_note_links_workspace_target_note_id ON note_links(workspace_id, target_note_id);
+CREATE INDEX idx_attachments_workspace_note_id ON attachments(workspace_id, note_id);
+CREATE INDEX idx_note_revisions_workspace_note_id_created_at ON note_revisions(workspace_id, note_id, created_at);
+CREATE INDEX idx_note_revisions_workspace_device_id ON note_revisions(workspace_id, device_id);
+CREATE INDEX idx_sync_changes_workspace_created ON sync_changes(workspace_id, created_at, id);
+CREATE INDEX idx_sync_changes_workspace_device_created ON sync_changes(workspace_id, device_id, created_at, id);
+CREATE INDEX idx_sync_changes_entity ON sync_changes(workspace_id, entity_type, entity_id);
+CREATE INDEX idx_sync_changes_revision ON sync_changes(workspace_id, entity_type, new_revision_id);
+CREATE INDEX idx_sync_conflicts_workspace_status ON sync_conflicts(workspace_id, status, created_at);
+CREATE INDEX idx_sync_conflicts_entity ON sync_conflicts(workspace_id, entity_type, entity_id);
+
+INSERT INTO schema_migrations (version, applied_at)
+VALUES ('0.3.0', unixepoch());
+
+PRAGMA foreign_key_check;
+
+COMMIT;
+
+PRAGMA foreign_keys = ON;

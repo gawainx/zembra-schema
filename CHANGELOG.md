@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 - 2026-05-03
+
+- Added workspace-scoped SQLite schema for bidirectional Supabase sync.
+- Added `sync_changes`, `sync_state`, and `sync_conflicts` database tables.
+- Updated SQLite business tables with `workspace_id`, sync metadata, and workspace-scoped uniqueness.
+- Added migration `003_add_bidirectional_sync.sql`.
+
 ## 0.2.0 - 2026-04-26
 
 - Added immutable note creation role with `Human` and `Agent` enum values.

@@ -6,10 +6,19 @@
   "additionalProperties": false,
   "properties": {
     "id": { "$ref": "#/$defs/id" },
+    "workspace_id": { "$ref": "#/$defs/id" },
     "name": { "type": "string", "minLength": 1 },
+    "parent_tag_id": {
+      "anyOf": [
+        { "$ref": "#/$defs/id" },
+        { "type": "null" }
+      ]
+    },
+    "path": { "type": "string", "minLength": 1 },
+    "depth": { "type": "integer", "minimum": 0 },
     "created_at": { "$ref": "#/$defs/timestamp" }
   },
-  "required": ["id", "name", "created_at"],
+  "required": ["id", "workspace_id", "name", "parent_tag_id", "path", "depth", "created_at"],
   "$defs": {
     "id": { "type": "string", "minLength": 1 },
     "timestamp": { "type": "integer", "minimum": 0 }

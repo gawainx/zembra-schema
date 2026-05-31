@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - 2026-05-31
+
+- Added structured hierarchical tags with `parent_tag_id`, `path`, and `depth`.
+- Added sibling and root-level tag uniqueness constraints.
+- Added migration `004_add_hierarchical_tags.sql` to migrate flat tags into hierarchical tag nodes.
+- Updated tag JSON Schema and export schema version to `0.4.0`.
+
 ## 0.3.0 - 2026-05-03
 
 - Added workspace-scoped SQLite schema for bidirectional Supabase sync.

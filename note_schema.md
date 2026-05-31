@@ -1,6 +1,6 @@
 # Zembra Note Schema
 
-本包定义 Zembra 笔记软件的本地数据库 schema。当前版本为 `0.3.0`，目标是覆盖面向人类和 Agent 的个人笔记应用核心对象，并为多 workspace、本地优先、Supabase 协调的双向同步提供数据库基础。
+本包定义 Zembra 笔记软件的本地数据库 schema。当前版本为 `0.4.0`，目标是覆盖面向人类和 Agent 的个人笔记应用核心对象，并为多 workspace、本地优先、Supabase 协调的双向同步提供数据库基础。
 
 ## 设计原则
 
@@ -21,6 +21,7 @@
 - `migrations/001_initial_schema.sql`：v0.1.0 初始迁移脚本。
 - `migrations/002_add_note_role.sql`：v0.2.0 role 迁移脚本。
 - `migrations/003_add_bidirectional_sync.sql`：v0.3.0 workspace 和同步迁移脚本。
+- `migrations/004_add_hierarchical_tags.sql`：v0.4.0 层级标签迁移脚本。
 - `CHANGELOG.md`：schema 变更记录。
 
 ## `workspaces` 工作区表
@@ -70,14 +71,19 @@
 
 ## `tags` 标签表
 
-`tags` 表达平铺标签，对应用户输入的 `#tag`。第一版不做层级标签。
+`tags` 表达结构化层级标签。根标签的 `parent_tag_id` 为空，子标签通过 `parent_tag_id` 指向父标签，`path` 保存完整标签路径，`depth` 保存从根标签开始的层级深度。
 
 | 字段名 | 类型 | 含义 | 约束信息 |
 | --- | --- | --- | --- |
 | `id` | `TEXT` | 标签唯一 ID | 主键；必填；创建后不可变 |
 | `workspace_id` | `TEXT` | 所属 workspace | 必填；外键引用 `workspaces.id` |
-| `name` | `TEXT` | 标签名 | 必填；在同一 workspace 内唯一 |
+| `name` | `TEXT` | 当前层级内的标签名 | 必填；同一 workspace 的根标签内唯一；同一父标签下唯一 |
+| `parent_tag_id` | `TEXT` | 父标签 ID | 可为空；为空表示根标签；外键引用 `tags.id` |
+| `path` | `TEXT` | 完整标签路径 | 必填；在同一 workspace 内唯一，例如 `books/hands-on-python` |
+| `depth` | `INTEGER` | 标签深度 | 必填；根标签为 `0`，子标签依次递增 |
 | `created_at` | `INTEGER` | 创建时间 | 必填；Unix timestamp |
+
+层级标签使用邻接表模型。`note_tags.tag_id` 可以关联任意层级的标签；如果业务只允许笔记关联叶子标签，该约束由应用层执行。标签重命名时需要同步更新自身和后代的 `path`。
 
 ## `note_tags` 笔记标签关联表
 

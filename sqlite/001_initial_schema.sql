@@ -23,10 +23,14 @@ CREATE TABLE IF NOT EXISTS tags (
     id TEXT PRIMARY KEY NOT NULL,
     workspace_id TEXT NOT NULL,
     name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+    parent_tag_id TEXT,
+    path TEXT NOT NULL CHECK (length(trim(path)) > 0),
+    depth INTEGER NOT NULL DEFAULT 0 CHECK (depth >= 0),
     created_at INTEGER NOT NULL CHECK (created_at >= 0),
     UNIQUE (workspace_id, id),
-    UNIQUE (workspace_id, name),
-    FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE ON DELETE RESTRICT
+    UNIQUE (workspace_id, path),
+    FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (workspace_id, parent_tag_id) REFERENCES tags(workspace_id, id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS devices (
@@ -166,7 +170,10 @@ CREATE TABLE IF NOT EXISTS sync_conflicts (
 CREATE INDEX IF NOT EXISTS idx_workspaces_updated_at ON workspaces(updated_at);
 CREATE INDEX IF NOT EXISTS idx_workspaces_deleted_at ON workspaces(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_fields_workspace_name ON fields(workspace_id, name);
-CREATE INDEX IF NOT EXISTS idx_tags_workspace_name ON tags(workspace_id, name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_root_name_unique ON tags(workspace_id, name) WHERE parent_tag_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_child_name_unique ON tags(workspace_id, parent_tag_id, name) WHERE parent_tag_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tags_workspace_parent ON tags(workspace_id, parent_tag_id);
+CREATE INDEX IF NOT EXISTS idx_tags_workspace_path ON tags(workspace_id, path);
 CREATE INDEX IF NOT EXISTS idx_notes_workspace_field_id ON notes(workspace_id, field_id);
 CREATE INDEX IF NOT EXISTS idx_notes_workspace_created_at ON notes(workspace_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_notes_workspace_updated_at ON notes(workspace_id, updated_at);

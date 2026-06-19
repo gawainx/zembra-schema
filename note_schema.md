@@ -1,6 +1,6 @@
 # Zembra Note Schema
 
-本包定义 Zembra 笔记软件的本地数据库 schema。当前版本为 `0.4.0`，目标是覆盖面向人类和 Agent 的个人笔记应用核心对象，并为多 workspace、本地优先、Supabase 协调的双向同步提供数据库基础。
+本包定义 Zembra 笔记软件的统一数据契约。当前版本为 `0.5.0`，目标是覆盖面向人类和 Agent 的个人笔记应用核心对象，并让本地 SQLite 与 Supabase/Postgres 远端同步协调层共用同一个业务语义、schema version 和迁移演化路径。
 
 ## 设计原则
 
@@ -13,16 +13,53 @@
 - 双向同步通过 `sync_changes` 交换可重放变更，通过 `sync_state` 记录游标，通过 `sync_conflicts` 记录需要处理的冲突。
 - 时间统一使用 Unix timestamp，单位由应用层保持一致。
 - ID 使用 `TEXT`，推荐 ULID 或 UUID，创建后不可变。
+- SQLite 与 Supabase/Postgres 共用同一个 schema version；数据库类型差异只能表达存储实现差异，不能表达独立业务语义。
+- backend 仓库只能消费本仓库发布的 schema 产物，不能独立维护 Postgres 业务 schema 或独立版本体系。
 
 ## 目录产物
 
-- `note_schema.md`：人读的设计说明。
+- `note_schema.md`：人读的统一数据契约说明。
 - `sqlite/001_initial_schema.sql`：SQLite 当前完整 DDL。
 - `migrations/001_initial_schema.sql`：v0.1.0 初始迁移脚本。
 - `migrations/002_add_note_role.sql`：v0.2.0 role 迁移脚本。
 - `migrations/003_add_bidirectional_sync.sql`：v0.3.0 workspace 和同步迁移脚本。
 - `migrations/004_add_hierarchical_tags.sql`：v0.4.0 层级标签迁移脚本。
+- `migrations/005_register_unified_postgres_contract.sql`：v0.5.0 统一 Postgres 契约版本登记脚本。
+- `postgres/001_initial_schema.sql`：Postgres 当前完整 DDL。
+- `postgres/migrations/005_add_unified_schema_contract.sql`：v0.5.0 Postgres bootstrap migration。
+- `supabase/README.md`：Supabase 平台配置边界说明。
 - `CHANGELOG.md`：schema 变更记录。
+
+## 统一版本规则
+
+SQLite、Postgres、JSON Schema 和人读文档共用同一个 schema version。当前版本 `0.5.0` 表示：
+
+| 产物 | 版本口径 |
+| --- | --- |
+| SQLite | `schema_migrations.version = '0.5.0'` |
+| Postgres | `schema_migrations.version = '0.5.0'` |
+| JSON Schema export | `schema_version = '0.5.0'` |
+| 文档 | 本文件和 `CHANGELOG.md` 的 `0.5.0` 条目 |
+
+SQLite 与 Postgres migration 编号强绑定。某个版本只要改变共享业务契约，就必须同时评估两端产物是否需要同编号 migration。若一端没有结构变化，也要用登记迁移或文档记录说明该端版本如何进入同一口径。
+
+## SQLite 与 Postgres 映射
+
+| 语义 | SQLite | Postgres |
+| --- | --- | --- |
+| workspace ID | `TEXT` UUID 字符串 | `uuid` |
+| 其他业务 ID | `TEXT` | `text` |
+| Unix timestamp | `INTEGER` | `bigint` |
+| JSON payload | `TEXT CHECK (json_valid(payload))` | `jsonb` |
+| boolean | `INTEGER CHECK(value IN (0, 1))` | `boolean` |
+
+类型映射不改变业务语义。字段名称、枚举值、必填性、软删除规则、workspace 隔离语义和同步收敛语义必须由本仓库统一定义。
+
+## Supabase/Postgres 边界
+
+`postgres/` 存放通用 Postgres DDL 和 migrations，是远端业务 schema 的正式契约来源。`supabase/` 只存放 RLS、Realtime、policy、project setting 等 Supabase 平台专属配置说明。
+
+当前版本不把 RLS/Auth policy 纳入统一 schema version。后续如果 RLS/Auth 开始承载业务访问语义，需要单独升级 schema version，并在本仓库中定义对应契约。
 
 ## `workspaces` 工作区表
 

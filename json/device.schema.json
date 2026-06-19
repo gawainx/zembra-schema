@@ -6,12 +6,15 @@
   "additionalProperties": false,
   "properties": {
     "id": { "$ref": "#/$defs/id" },
+    "workspace_id": { "$ref": "#/$defs/id" },
     "name": { "type": "string", "minLength": 1 },
     "platform": { "type": "string", "minLength": 1 },
     "created_at": { "$ref": "#/$defs/timestamp" },
-    "last_seen_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] }
+    "last_seen_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+    "sync_enabled": { "type": "boolean" },
+    "last_synced_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] }
   },
-  "required": ["id", "name", "platform", "created_at"],
+  "required": ["id", "workspace_id", "name", "platform", "created_at", "sync_enabled"],
   "$defs": {
     "id": { "type": "string", "minLength": 1 },
     "timestamp": { "type": "integer", "minimum": 0 }

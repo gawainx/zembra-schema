@@ -5,11 +5,12 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "workspace_id": { "$ref": "#/$defs/id" },
     "note_id": { "$ref": "#/$defs/id" },
     "tag_id": { "$ref": "#/$defs/id" },
     "created_at": { "$ref": "#/$defs/timestamp" }
   },
-  "required": ["note_id", "tag_id", "created_at"],
+  "required": ["workspace_id", "note_id", "tag_id", "created_at"],
   "$defs": {
     "id": { "type": "string", "minLength": 1 },
     "timestamp": { "type": "integer", "minimum": 0 }

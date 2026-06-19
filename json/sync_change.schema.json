@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zembra.local/schema/json/sync_change.schema.json",
+  "title": "Zembra Sync Change",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "workspace_id": { "$ref": "#/$defs/id" },
+    "device_id": { "$ref": "#/$defs/id" },
+    "entity_type": { "$ref": "#/$defs/entity_type" },
+    "entity_id": { "$ref": "#/$defs/id" },
+    "operation": { "type": "string", "enum": ["insert", "update", "delete", "restore", "attach", "detach"] },
+    "base_revision_id": { "type": ["string", "null"], "minLength": 1 },
+    "new_revision_id": { "type": ["string", "null"], "minLength": 1 },
+    "payload": { "type": "object" },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "applied_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+    "supabase_committed_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] }
+  },
+  "required": ["id", "workspace_id", "device_id", "entity_type", "entity_id", "operation", "payload", "created_at"],
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "integer", "minimum": 0 },
+    "entity_type": {
+      "type": "string",
+      "enum": ["workspace", "device", "field", "tag", "note", "note_revision", "note_tag", "note_link", "attachment"]
+    }
+  }
+}

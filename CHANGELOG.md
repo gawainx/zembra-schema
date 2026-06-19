@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 - 2026-06-19
+
+- Added Postgres DDL and migration artifacts for the Supabase coordination schema.
+- Added a SQLite version registration migration for the unified Postgres contract.
+- Updated JSON Schema contracts for workspace-scoped entities and sync objects.
+- Documented the shared SQLite/Postgres schema version policy and backend consumption boundary.
+
 ## 0.4.0 - 2026-05-31
 
 - Added structured hierarchical tags with `parent_tag_id`, `path`, and `depth`.

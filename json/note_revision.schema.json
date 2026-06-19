@@ -6,13 +6,16 @@
   "additionalProperties": false,
   "properties": {
     "id": { "$ref": "#/$defs/id" },
+    "workspace_id": { "$ref": "#/$defs/id" },
     "note_id": { "$ref": "#/$defs/id" },
     "content": { "type": "string" },
     "title": { "type": ["string", "null"] },
     "device_id": { "type": ["string", "null"], "minLength": 1 },
-    "created_at": { "$ref": "#/$defs/timestamp" }
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "base_revision_id": { "type": ["string", "null"], "minLength": 1 },
+    "change_id": { "type": ["string", "null"], "minLength": 1 }
   },
-  "required": ["id", "note_id", "content", "created_at"],
+  "required": ["id", "workspace_id", "note_id", "content", "created_at"],
   "$defs": {
     "id": { "type": "string", "minLength": 1 },
     "timestamp": { "type": "integer", "minimum": 0 }

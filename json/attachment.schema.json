@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "properties": {
     "id": { "$ref": "#/$defs/id" },
+    "workspace_id": { "$ref": "#/$defs/id" },
     "note_id": { "$ref": "#/$defs/id" },
     "file_name": { "type": "string", "minLength": 1 },
     "mime_type": { "type": "string", "minLength": 1 },
@@ -13,7 +14,7 @@
     "size_bytes": { "type": "integer", "minimum": 0 },
     "created_at": { "$ref": "#/$defs/timestamp" }
   },
-  "required": ["id", "note_id", "file_name", "mime_type", "storage_path", "size_bytes", "created_at"],
+  "required": ["id", "workspace_id", "note_id", "file_name", "mime_type", "storage_path", "size_bytes", "created_at"],
   "$defs": {
     "id": { "type": "string", "minLength": 1 },
     "timestamp": { "type": "integer", "minimum": 0 }

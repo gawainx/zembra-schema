@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zembra.local/schema/json/sync_conflict.schema.json",
+  "title": "Zembra Sync Conflict",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "workspace_id": { "$ref": "#/$defs/id" },
+    "entity_type": { "$ref": "#/$defs/entity_type" },
+    "entity_id": { "$ref": "#/$defs/id" },
+    "conflict_type": {
+      "type": "string",
+      "enum": ["concurrent_note_edit", "delete_vs_update", "relation_attach_vs_detach", "schema_incompatible"]
+    },
+    "local_change_id": { "type": ["string", "null"], "minLength": 1 },
+    "remote_change_id": { "type": ["string", "null"], "minLength": 1 },
+    "local_revision_id": { "type": ["string", "null"], "minLength": 1 },
+    "remote_revision_id": { "type": ["string", "null"], "minLength": 1 },
+    "winning_revision_id": { "type": ["string", "null"], "minLength": 1 },
+    "status": { "type": "string", "enum": ["open", "auto_resolved", "resolved", "ignored"] },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "resolved_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+    "resolution_note": { "type": ["string", "null"] }
+  },
+  "required": ["id", "workspace_id", "entity_type", "entity_id", "conflict_type", "status", "created_at"],
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "integer", "minimum": 0 },
+    "entity_type": {
+      "type": "string",
+      "enum": ["workspace", "device", "field", "tag", "note", "note_revision", "note_tag", "note_link", "attachment"]
+    }
+  }
+}

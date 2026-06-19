@@ -5,7 +5,8 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "schema_version": { "type": "string", "const": "0.4.0" },
+    "schema_version": { "type": "string", "const": "0.5.0" },
+    "workspaces": { "type": "array", "items": { "$ref": "workspace.schema.json" } },
     "notes": { "type": "array", "items": { "$ref": "note.schema.json" } },
     "fields": { "type": "array", "items": { "$ref": "field.schema.json" } },
     "tags": { "type": "array", "items": { "$ref": "tag.schema.json" } },
@@ -13,10 +14,14 @@
     "note_links": { "type": "array", "items": { "$ref": "note_link.schema.json" } },
     "attachments": { "type": "array", "items": { "$ref": "attachment.schema.json" } },
     "note_revisions": { "type": "array", "items": { "$ref": "note_revision.schema.json" } },
-    "devices": { "type": "array", "items": { "$ref": "device.schema.json" } }
+    "devices": { "type": "array", "items": { "$ref": "device.schema.json" } },
+    "sync_changes": { "type": "array", "items": { "$ref": "sync_change.schema.json" } },
+    "sync_state": { "type": "array", "items": { "$ref": "sync_state.schema.json" } },
+    "sync_conflicts": { "type": "array", "items": { "$ref": "sync_conflict.schema.json" } }
   },
   "required": [
     "schema_version",
+    "workspaces",
     "notes",
     "fields",
     "tags",
@@ -24,6 +29,9 @@
     "note_links",
     "attachments",
     "note_revisions",
-    "devices"
+    "devices",
+    "sync_changes",
+    "sync_state",
+    "sync_conflicts"
   ]
 }

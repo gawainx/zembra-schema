@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "properties": {
     "id": { "$ref": "#/$defs/id" },
+    "workspace_id": { "$ref": "#/$defs/id" },
     "content": { "type": "string" },
     "role": { "type": "string", "enum": ["Human", "Agent"] },
     "field_id": { "type": ["string", "null"], "minLength": 1 },
@@ -13,9 +14,11 @@
     "updated_at": { "$ref": "#/$defs/timestamp" },
     "archived_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
     "deleted_at": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
-    "current_revision_id": { "type": ["string", "null"], "minLength": 1 }
+    "current_revision_id": { "type": ["string", "null"], "minLength": 1 },
+    "last_change_id": { "type": ["string", "null"], "minLength": 1 },
+    "conflict_status": { "type": "string", "enum": ["none", "auto_resolved", "needs_review"] }
   },
-  "required": ["id", "content", "role", "created_at", "updated_at"],
+  "required": ["id", "workspace_id", "content", "role", "created_at", "updated_at", "conflict_status"],
   "$defs": {
     "id": { "type": "string", "minLength": 1 },
     "timestamp": { "type": "integer", "minimum": 0 }

@@ -47,6 +47,8 @@ SQLite、Postgres、JSON Schema 和人读文档共用同一个 schema version。
 
 SQLite 与 Postgres migration 编号强绑定。某个版本只要改变共享业务契约，就必须同时评估两端产物是否需要同编号 migration。若一端没有结构变化，也要用登记迁移或文档记录说明该端版本如何进入同一口径。
 
+仓库根目录的 `migrations/` 只用于 SQLite，不能在 Supabase SQL Editor 执行。Supabase 项目只执行 `supabase/migrations/` 中的 SQL；通用 Postgres 版本登记使用 `postgres/migrations/`。
+
 ## SQLite 与 Postgres 映射
 
 | 语义 | SQLite | Postgres |

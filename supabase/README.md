@@ -8,6 +8,8 @@ Version `0.6.0` defines `workspace_members` as the Supabase Auth relationship to
 
 ## Upgrade an existing 0.5.0 database
 
+Run only the SQL files in `supabase/migrations/` against Supabase. Files in the repository-root `migrations/` directory are SQLite migrations and use SQLite functions such as `unixepoch()`.
+
 1. Apply `006_create_workspace_members.sql`. It immediately enables RLS on the membership table and reserves membership changes for the administrator.
 2. Insert one or more manager rows for every existing workspace using the matching `auth.users.id` values.
 3. Apply `007_enable_workspace_rls.sql`. Its preflight check stops the migration when a workspace has no manager.

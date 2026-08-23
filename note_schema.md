@@ -1,6 +1,6 @@
 # Zembra Note Schema
 
-本包定义 Zembra 笔记软件的统一数据契约。当前版本为 `0.5.0`，目标是覆盖面向人类和 Agent 的个人笔记应用核心对象，并让本地 SQLite 与 Supabase/Postgres 远端同步协调层共用同一个业务语义、schema version 和迁移演化路径。
+本包定义 Zembra 笔记软件的统一数据契约。当前版本为 `0.6.0`，目标是覆盖面向人类和 Agent 的个人笔记应用核心对象，并让本地 SQLite 与 Supabase/Postgres 远端同步协调层共用同一个业务语义、schema version 和迁移演化路径。
 
 ## 设计原则
 
@@ -27,19 +27,23 @@
 - `migrations/005_register_unified_postgres_contract.sql`：v0.5.0 统一 Postgres 契约版本登记脚本。
 - `postgres/001_initial_schema.sql`：Postgres 当前完整 DDL。
 - `postgres/migrations/005_add_unified_schema_contract.sql`：v0.5.0 Postgres bootstrap migration。
+- `migrations/006_register_workspace_members_rls_contract.sql`：v0.6.0 SQLite 契约版本登记脚本。
+- `postgres/migrations/006_register_workspace_members_rls_contract.sql`：v0.6.0 Postgres 契约版本登记脚本。
+- `supabase/migrations/006_create_workspace_members.sql`：v0.6.0 Supabase Auth 成员关系迁移。
+- `supabase/migrations/007_enable_workspace_rls.sql`：v0.6.0 RLS、权限和策略迁移。
 - `supabase/README.md`：Supabase 平台配置边界说明。
 - `CHANGELOG.md`：schema 变更记录。
 
 ## 统一版本规则
 
-SQLite、Postgres、JSON Schema 和人读文档共用同一个 schema version。当前版本 `0.5.0` 表示：
+SQLite、Postgres、JSON Schema 和人读文档共用同一个 schema version。当前版本 `0.6.0` 表示：
 
 | 产物 | 版本口径 |
 | --- | --- |
-| SQLite | `schema_migrations.version = '0.5.0'` |
-| Postgres | `schema_migrations.version = '0.5.0'` |
-| JSON Schema export | `schema_version = '0.5.0'` |
-| 文档 | 本文件和 `CHANGELOG.md` 的 `0.5.0` 条目 |
+| SQLite | `schema_migrations.version = '0.6.0'` |
+| Postgres | `schema_migrations.version = '0.6.0'` |
+| JSON Schema export | `schema_version = '0.6.0'` |
+| 文档 | 本文件和 `CHANGELOG.md` 的 `0.6.0` 条目 |
 
 SQLite 与 Postgres migration 编号强绑定。某个版本只要改变共享业务契约，就必须同时评估两端产物是否需要同编号 migration。若一端没有结构变化，也要用登记迁移或文档记录说明该端版本如何进入同一口径。
 
@@ -57,9 +61,9 @@ SQLite 与 Postgres migration 编号强绑定。某个版本只要改变共享�
 
 ## Supabase/Postgres 边界
 
-`postgres/` 存放通用 Postgres DDL 和 migrations，是远端业务 schema 的正式契约来源。`supabase/` 只存放 RLS、Realtime、policy、project setting 等 Supabase 平台专属配置说明。
+`postgres/` 存放通用 Postgres DDL 和 migrations，是远端业务 schema 的正式契约来源。`supabase/` 存放依赖 Supabase Auth 的成员关系、RLS、Realtime、policy 和 project setting 等平台专属配置。
 
-当前版本不把 RLS/Auth policy 纳入统一 schema version。后续如果 RLS/Auth 开始承载业务访问语义，需要单独升级 schema version，并在本仓库中定义对应契约。
+`workspace_members` 是 Supabase Auth 用户与 workspace 的正式关系。当前成员角色固定为 `manager`。WebUI 通过该关系读取和编辑 workspace 业务数据，且只读取同步表。RLS/Auth policy 自 `0.6.0` 起纳入统一 schema version。
 
 ## `workspaces` 工作区表
 

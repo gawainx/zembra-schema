@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0 - 2026-08-23
+
+- Added Supabase Auth-backed `workspace_members` with the `manager` role.
+- Added an in-place `0.5.0` upgrade path that preserves existing workspace-scoped data and requires manager backfill before RLS activation.
+- Added workspace RLS policies for authenticated WebUI access, including read-only access to sync tables.
+
 ## 0.5.0 - 2026-06-19
 
 - Added Postgres DDL and migration artifacts for the Supabase coordination schema.

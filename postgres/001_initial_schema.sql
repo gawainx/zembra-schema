@@ -198,6 +198,6 @@ CREATE INDEX idx_sync_conflicts_workspace_status ON sync_conflicts(workspace_id,
 CREATE INDEX idx_sync_conflicts_entity ON sync_conflicts(workspace_id, entity_type, entity_id);
 
 INSERT INTO schema_migrations (version, applied_at)
-VALUES ('0.5.0', extract(epoch from now())::bigint);
+VALUES ('0.6.0', extract(epoch from now())::bigint);
 
 COMMIT;

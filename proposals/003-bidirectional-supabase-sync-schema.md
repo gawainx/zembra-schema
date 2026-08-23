@@ -494,7 +494,7 @@ ORDER BY created_at ASC, id ASC
 
 ## SQLite migration 建议
 
-建议新增 `migrations/003_add_bidirectional_sync.sql`。
+建议新增 `migrations/sqlite/003_add_bidirectional_sync.sql`。
 
 迁移顺序：
 

@@ -21,7 +21,7 @@
 **状态：** Finished
 
 **文件：**
-- 修改：`sqlite/001_initial_schema.sql`
+- 修改：`migrations/sqlite/current_schema.sql`
 
 - 功能：为 `tags` 增加 `parent_tag_id`、`path`、`depth` 和层级唯一约束。
 - 实现说明：保留 `tags.id` 主键与 `note_tags` 关系；新增复合自引用外键；新增根标签同名唯一、同父标签同名唯一、路径唯一索引。
@@ -32,7 +32,7 @@
 **状态：** Finished
 
 **文件：**
-- 创建：`migrations/004_add_hierarchical_tags.sql`
+- 创建：`migrations/sqlite/004_add_hierarchical_tags.sql`
 
 - 功能：把已有平铺标签迁移成层级标签。
 - 实现说明：重建 `tags`；旧标签默认作为根标签迁移；若旧 `name` 包含 `/`，保留原 tag id 作为叶子节点，并按路径创建缺失父节点；插入 `schema_migrations` 版本 `0.4.0`。
@@ -61,7 +61,7 @@
 - 修改：`CHANGELOG.md`
 
 - 功能：说明层级标签模型、迁移行为和版本变化。
-- 实现说明：移除“第一版不做层级标签”的过期描述；记录 `migrations/004_add_hierarchical_tags.sql`。
+- 实现说明：移除“第一版不做层级标签”的过期描述；记录 `migrations/sqlite/004_add_hierarchical_tags.sql`。
 - 预期验证结果：文档版本、目录产物和 tags 表说明一致。
 
 ## Phase #3: Verification And Release

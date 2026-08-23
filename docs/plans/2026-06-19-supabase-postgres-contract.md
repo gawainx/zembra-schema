@@ -56,8 +56,8 @@
 **状态：** Finished
 
 **文件：**
-- 创建：`migrations/005_register_unified_postgres_contract.sql`
-- 创建：`postgres/migrations/005_add_unified_schema_contract.sql`
+- 创建：`migrations/sqlite/005_register_unified_postgres_contract.sql`
+- 创建：`migrations/supabase/005_add_unified_schema_contract.sql`
 
 - 功能：让 SQLite 与 Postgres 在 `0.5.0` 上拥有相同业务版本口径。
 - 实现说明：SQLite 侧只登记版本；Postgres 侧作为远端空库 bootstrap migration。
@@ -100,7 +100,7 @@
 **状态：** Finished
 
 **文件：**
-- 验证：`sqlite/001_initial_schema.sql`
+- 验证：`migrations/sqlite/current_schema.sql`
 - 验证：`migrations/*.sql`
 - 验证：`json/*.schema.json`
 - 验证：`postgres/*.sql`

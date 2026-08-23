@@ -19,19 +19,19 @@
 ## 目录产物
 
 - `note_schema.md`：人读的统一数据契约说明。
-- `sqlite/001_initial_schema.sql`：SQLite 当前完整 DDL。
-- `migrations/001_initial_schema.sql`：v0.1.0 初始迁移脚本。
-- `migrations/002_add_note_role.sql`：v0.2.0 role 迁移脚本。
-- `migrations/003_add_bidirectional_sync.sql`：v0.3.0 workspace 和同步迁移脚本。
-- `migrations/004_add_hierarchical_tags.sql`：v0.4.0 层级标签迁移脚本。
-- `migrations/005_register_unified_postgres_contract.sql`：v0.5.0 统一 Postgres 契约版本登记脚本。
+- `migrations/sqlite/current_schema.sql`：SQLite 当前完整 DDL。
+- `migrations/sqlite/001_initial_schema.sql`：v0.1.0 初始迁移脚本。
+- `migrations/sqlite/002_add_note_role.sql`：v0.2.0 role 迁移脚本。
+- `migrations/sqlite/003_add_bidirectional_sync.sql`：v0.3.0 workspace 和同步迁移脚本。
+- `migrations/sqlite/004_add_hierarchical_tags.sql`：v0.4.0 层级标签迁移脚本。
+- `migrations/sqlite/005_register_unified_postgres_contract.sql`：v0.5.0 统一 Postgres 契约版本登记脚本。
 - `postgres/001_initial_schema.sql`：Postgres 当前完整 DDL。
-- `postgres/migrations/005_add_unified_schema_contract.sql`：v0.5.0 Postgres bootstrap migration。
-- `migrations/006_register_workspace_members_rls_contract.sql`：v0.6.0 SQLite 契约版本登记脚本。
-- `postgres/migrations/006_register_workspace_members_rls_contract.sql`：v0.6.0 Postgres 契约版本登记脚本。
-- `supabase/migrations/006_create_workspace_members.sql`：v0.6.0 Supabase Auth 成员关系迁移。
-- `supabase/migrations/007_enable_workspace_rls.sql`：v0.6.0 RLS、权限和策略迁移。
-- `supabase/README.md`：Supabase 平台配置边界说明。
+- `migrations/supabase/005_add_unified_schema_contract.sql`：v0.5.0 Supabase/Postgres bootstrap migration。
+- `migrations/sqlite/006_register_workspace_members_rls_contract.sql`：v0.6.0 SQLite 契约版本登记脚本。
+- `migrations/supabase/006_register_workspace_members_rls_contract.sql`：v0.6.0 Supabase/Postgres 契约版本登记脚本。
+- `migrations/supabase/006_create_workspace_members.sql`：v0.6.0 Supabase Auth 成员关系迁移。
+- `migrations/supabase/007_enable_workspace_rls.sql`：v0.6.0 RLS、权限和策略迁移。
+- `migrations/supabase/README.md`：Supabase 平台配置边界和升级说明。
 - `CHANGELOG.md`：schema 变更记录。
 
 ## 统一版本规则
@@ -47,7 +47,7 @@ SQLite、Postgres、JSON Schema 和人读文档共用同一个 schema version。
 
 SQLite 与 Postgres migration 编号强绑定。某个版本只要改变共享业务契约，就必须同时评估两端产物是否需要同编号 migration。若一端没有结构变化，也要用登记迁移或文档记录说明该端版本如何进入同一口径。
 
-仓库根目录的 `migrations/` 只用于 SQLite，不能在 Supabase SQL Editor 执行。Supabase 项目只执行 `supabase/migrations/` 中的 SQL；通用 Postgres 版本登记使用 `postgres/migrations/`。
+`migrations/sqlite/` 只用于 SQLite，不能在 Supabase SQL Editor 执行。Supabase 项目只执行 `migrations/supabase/` 中的 SQL。
 
 ## SQLite 与 Postgres 映射
 
